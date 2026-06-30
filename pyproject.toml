@@ -1,0 +1,13 @@
+[project]
+name = "psytoday-scraper"
+version = "0.1.0"
+description = "Scrape Psychology Today couples-therapist profiles in NYC and score them via the Anthropic API."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.112.0",
+    "beautifulsoup4>=4.15.0",
+    "curl-cffi>=0.15.0",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.2",
+    "tenacity>=9.1.4",
+]

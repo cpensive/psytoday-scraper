@@ -1,0 +1,14 @@
+# Secrets
+.env
+
+# Scraper outputs / data
+data/
+
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
