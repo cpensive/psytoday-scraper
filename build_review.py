@@ -50,6 +50,7 @@ def _trim(record: dict) -> dict:
         "online": bool(s.get("online")),
         "url": record.get("url", ""),
         "website": record.get("website_url", ""),
+        "phone": record.get("phone") or "",
         "location": record.get("location") or "",
         "bio": record.get("bio_narrative") or "",
         "treatment": record.get("treatment_approach_text") or "",
@@ -237,7 +238,8 @@ function card(t){
   const fmt=[]; if(t.in_person)fmt.push("in-person"); if(t.online)fmt.push("online");
   const S=["shortlist","intro","session","pass"], L={shortlist:"Shortlist",intro:"Intro",session:"Session",pass:"Pass"};
   const segs=S.map(s=>`<button class="seg ${d.status===s?'on':''}" data-act="${s}">${L[s]}</button>`).join("");
-  const links=[ t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener">Profile \u2197</a>`:"",
+  const links=[ t.phone?`<a href="tel:${esc(t.phone.replace(/[^\d+]/g,''))}">${esc(t.phone)}</a>`:"",
+               t.url?`<a href="${esc(t.url)}" target="_blank" rel="noopener">Profile \u2197</a>`:"",
                t.website?`<a href="${esc(t.website)}" target="_blank" rel="noopener">Website \u2197</a>`:"" ].filter(Boolean).join("  ");
   const detail=(t.bio||t.treatment)?`<details><summary>Read bio</summary><div class="body">${esc([t.bio,t.treatment].filter(Boolean).join("\n\n"))}</div></details>`:"";
   return `<div class="card ${d.status==='pass'?'pass':''}" data-id="${esc(t.id)}">

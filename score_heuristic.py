@@ -365,8 +365,8 @@ def _summary(s: dict) -> str:
 CSV_COLUMNS = [
     "Name", "Verdict", "Score", "ExcludeReason", "CouplesCentrality", "Method",
     "MethodDepth", "Years", "Style", "Cultural", "License", "ADHD",
-    "Generalist", "Languages", "School", "FeeCouples", "Website", "PT_URL",
-    "OneLine", "AskOnCall",
+    "Generalist", "Languages", "School", "FeeCouples", "Phone", "Website",
+    "PT_URL", "OneLine", "AskOnCall",
 ]
 VERDICT_RANK = {"CALL": 0, "READ_MORE": 1, "SKIP": 2, "EXCLUDED": 3, "ERROR": 4}
 
@@ -391,6 +391,7 @@ def row_from(record: dict) -> dict:
         "Languages": ", ".join(record.get("languages") or []),
         "School": record.get("school") or "",
         "FeeCouples": record.get("fee_couples") or "",
+        "Phone": record.get("phone") or "",
         "Website": record.get("website_url") or "",
         "PT_URL": record.get("url", ""),
         "OneLine": ev.get("one_line", ""),

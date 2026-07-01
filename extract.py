@@ -11,6 +11,7 @@ Output: data/profiles.json
 
 from __future__ import annotations
 
+import html as _html
 import json
 import re
 import sys
@@ -132,7 +133,17 @@ def _fee(soup: BeautifulSoup, key: str) -> str | None:
 
 
 def _website(soup: BeautifulSoup) -> str | None:
-    """Best-effort personal-website link (excludes PT's own domains)."""
+    """Best-effort personal-website link.
+
+    PT renders the "My website" link as a same-origin redirect
+    (``/us/profile/<id>/website``), not a direct external href - so this must
+    be checked BEFORE the http(s)-only external-link fallback below.
+    """
+    a = soup.select_one('a[data-x="website-link"][href]')
+    if a and a["href"]:
+        href = a["href"]
+        return href if href.startswith("http") else f"{config.PT_BASE}{href}"
+
     blocked = ("psychologytoday.com", "sussexdirectories.com", "workable.com")
     for a in soup.find_all("a", href=True):
         href = a["href"]
@@ -144,6 +155,28 @@ def _website(soup: BeautifulSoup) -> str | None:
         if "website" in label or a.get("rel") and "nofollow" in (a.get("rel") or []):
             return href
     return None
+
+
+def _phone(soup: BeautifulSoup, html: str) -> str | None:
+    """Direct phone number, if PT displays one (``tel:`` link, else the
+    og:description meta tag which lists it right after city/state/zip)."""
+    a = soup.select_one('a[href^="tel:"]')
+    if a:
+        return a.get_text(strip=True) or a["href"].removeprefix("tel:")
+    m = re.search(r'og:description"\s+content="[^"]*?,\s*(\(\d{3}\)\s?\d{3}-\d{4})', html)
+    return m.group(1) if m else None
+
+
+def _title_name(page_html: str) -> str | None:
+    """Fallback name parse from <title> ('Name, Credential | Role, City, ST,
+    Zip | Psychology Today'). Used when the JSON-LD Person block has no name -
+    happens for some group-practice listings whose @type isn't Person."""
+    m = re.search(r"<title>([^<]+)</title>", page_html)
+    if not m:
+        return None
+    title = _html.unescape(m.group(1)).split(" | ")[0]
+    name = title.split(",")[0].strip()
+    return name or None
 
 
 def _years_in_practice(html: str) -> str | None:
@@ -204,7 +237,7 @@ def extract_profile(html: str, base: dict) -> dict:
 
     record = {
         **base,
-        "name": str(ld.get("name") or "").strip() or base.get("name_slug", ""),
+        "name": str(ld.get("name") or "").strip() or _title_name(html) or base.get("name_slug", ""),
         "credentials": credentials,
         "job_title": str(ld.get("jobTitle") or "").strip(),
         "bio_narrative": bio,
@@ -230,6 +263,7 @@ def extract_profile(html: str, base: dict) -> dict:
         "license_type": _license_type(credentials),
         "license_number": None,
         "website_url": _website(soup),
+        "phone": _phone(soup, html),
         "endorsements": _section_text(soup, "Endorsement", 2000) or None,
         "qualifications_text": f"{qual_text} {edu_text}".strip(),
         "treatment_approach_text": treat_text,
